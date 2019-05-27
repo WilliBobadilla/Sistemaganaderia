@@ -23,13 +23,13 @@ source env/bin/activate
 pip install -r requirements.txt
 
 ```
-##Running the server 
-###For linux 
+## Running the server 
+### For linux 
 ```bash
 export FLASK_APP=app.py 
 
 ```
-###For Windows
+### For Windows
 ```bash
 set FLASK_APP=app.py
 
