@@ -69,6 +69,38 @@ def registro():
                 cur.execute('''INSERT INTO animales (Id,Nombre,Peso,Dosis,Ultimafecha,Vacunas) VALUES (?,?,?,?,?,?);''', datos )
             
                 con.commit()   
+        except:
+            con.rollback()
+        finally:
+            con.close()# cerramos la conexion de la base de datos 
+            js=lista()   #retornamos datos de la db para el form del lado del cliente
+            return render_template('registro.html',dato=js)
+
+@app.route('/formulario_peso')
+def formulario_peso():
+    js=lista_peso()    #llamamos a la funcion para retornar del lado del cliente datos par el formulario
+    return render_template('registro_peso.html',dato=js)
+
+@app.route('/registro_peso', methods=['POST','GET'])      # aca es para registrar al animal
+def registro_peso():
+    
+        try:
+            Id=request.form['Id']                         #identificativo del animal
+            peso=request.form['peso']
+            fecha=request.form['Fecha']
+            datos=[Id,peso,fecha]  # esto es para meter en la db luego
+            with sql.connect(nombre_db) as con:        
+                cur = con.cursor()
+                cur.execute('''CREATE TABLE IF NOT EXISTS Pesos (
+                                        Id integer ,                                        
+                                        Peso real NOT NULL,
+                                        Fecha text
+                                        
+                                    );'''
+                       )
+                cur.execute('''INSERT INTO Pesos (Id,Peso,Fecha) VALUES (?,?,?);''', datos )
+            
+                con.commit()   
              
         except:
             con.rollback()
@@ -76,9 +108,7 @@ def registro():
         finally:
             con.close()# cerramos la conexion de la base de datos 
             js=lista()   #retornamos datos de la db para el form del lado del cliente
-            return render_template('registro.html',dato=js)
-            
-
+            return render_template('registro_peso.html',dato=js)
 
 @app.route('/signUp',methods=['POST','GET'])
 def signUp():
@@ -95,6 +125,18 @@ def list():
    
    rows = cur.fetchall()
    return render_template("list.html",rows = rows)
+
+@app.route('/list_peso')
+def list_peso():
+   con = sql.connect(nombre_db)   
+   con.row_factory = sql.Row
+   cur = con.cursor()
+   cur.execute("select * from Pesos")
+  
+   
+   rows = cur.fetchall()
+   return render_template("list_peso.html",rows = rows)
+    
     
 @app.route('/consulta')
 def consulta():
@@ -154,6 +196,42 @@ def lista():
            js={
              'Id': " ",  
                  'razas': " "
+
+            }
+       return js
+
+def lista_peso():
+   try:
+       con = sql.connect(nombre_db)
+       con.row_factory = sql.Row  
+       cur = con.cursor()
+       cur.execute("select * from Pesos")
+       dato = cur.fetchall()     #cargamos toda la info de la db en la variable dato
+       pesos=[]                   #lista para almacenar datos de razas 
+       id=[]
+       for a in dato:
+          id.append(a[0])    #usamos la posicion 0 ya que ahi se encuentra el id
+       for a in dato:
+          Peso.append(a[1])   #usamos la posicion 1 ya que ahi se encuentran las razas 
+                            # en la siguiente linea formateamos en json para luego formatear del lado del cliente en js 
+       js={
+            'Id': id, 
+        'Peso': Peso
+        
+        }
+       return js   
+   except:            #si tiene problemas puede ser porque no existe la base de datos
+       with sql.connect(nombre_db) as con:        
+           cur = con.cursor()
+           cur.execute('''CREATE TABLE IF NOT EXISTS Pesos (
+                                        Id integer ,                                       
+                                        Peso REAL NOT NULL,
+                                        Fecha text NOT NULL
+                                    );'''
+                       )
+           js={
+             'Id': " ",  
+                 'Peso': " "
 
             }
        return js
